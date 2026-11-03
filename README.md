@@ -132,7 +132,7 @@ cp ~/.dsh/profiles/web/node_modules/dsh-plugin-config-backup/skills/dsh-config-b
 
 ## 实现要点
 
-- Host 侧 `BackupService` 是 cordis Service（名字 `backups`），带 typert Remote 方法 `status` / `run` / `remove` / `prune` / `origin` / `restore`。没有生成 typert 产物，靠 Gateway 的源码回退（source-mode）暴露。
+- Host 侧 `BackupService` 是 cordis Service（名字 `backups`），带 typert Remote 方法 `status` / `run` / `remove` / `prune` / `origin` / `restore` / `import`。没有生成 typert 产物，靠 Gateway 的源码回退（source-mode）暴露。
 - 面板走共享的 `/api` RPC 通道：`POST /api/backups/status`，body 是 `{type:'client-request', rpcId, method:'backups/status', payload:{args:{}}}`。客户端没有该命名空间的 `ctx.remote` 绑定，所以用 `fetch`。
 - 面板每 5 秒轮询一次 `status()`，用响应里的 `token` 判断状态是否变化；同一个页面还顺带轮询一次，用来在别人（定时/其它会话）触发备份时弹 toast。
 - cordis 给调用方的是 Service 的派生副本，所以运行状态放在实例字段 `this.state` 上，不放模块级 WeakMap。

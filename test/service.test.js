@@ -45,7 +45,7 @@ async function mount(settings = {}) {
 test('the service exports exactly the Remote methods the panel calls', () => {
   // `remoteMethods` reads the prototype of a live instance, so probe an instance.
   const names = remoteMethods({ __proto__: BackupService.prototype }).map(marker => marker.method).sort()
-  assert.deepEqual(names, ['origin', 'prune', 'remove', 'restore', 'run', 'status'])
+  assert.deepEqual(names, ['import', 'origin', 'prune', 'remove', 'restore', 'run', 'status'])
 })
 
 test('status reports the schedule and an empty history', async t => {
@@ -138,4 +138,19 @@ test('restore reports unknown ids as backup/not-found', async t => {
   t.after(() => remove(home, { recursive: true, force: true }))
   await service.run()
   await assert.rejects(service.restore('20200101-000000'), error => error.code === 'backup/not-found')
+})
+
+test('import adds an exported archive as a snapshot', async t => {
+  const { home, service } = await mount()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  const created = await service.run()
+  const archive = await service.origin(created.entry.id)
+  t.after(() => remove(archive.file, { force: true }))
+  const result = await service.import(archive.file)
+  // The same snapshot id already exists locally, so the import lands with a suffix.
+  assert.equal(result.entry.id.startsWith(created.entry.id), true)
+  assert.match(result.entry.id, /-1$/)
+  assert.equal(result.sourceHost.length > 0, true)
+  assert.ok(result.snapshot.entries.some(entry => entry.id === result.entry.id && entry.kind === 'import'))
+  await assert.rejects(service.import(archive.file), error => error.code === 'backup/import-failed')
 })

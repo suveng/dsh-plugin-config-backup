@@ -49,5 +49,6 @@
   "kind.import": "imported",
   "export.hint": "Press Export on a backup to pack it into a .tar.gz; import it elsewhere with Choose file.",
   "import.hint": "An import only adds a row; press Restore to apply it.",
-  "restore.hint": "Restore overwrites the current configuration, after taking a safety backup first."
+  "restore.hint": "Restore overwrites the current configuration, after taking a safety backup first.",
+  "hint": "Export a backup into a .tar.gz, import it on another machine with Choose file, then press Restore to apply it."
 }
