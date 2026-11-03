@@ -36,12 +36,29 @@
 2. 把仓库装进 profile（路径换成你 clone 的位置）：
 
    ```bash
-   dsh plugin install /Users/you/github/dsh-plugin-config-backup --profile web
+   dsh plugin --profile web add /Users/you/github/dsh-plugin-config-backup
    ```
 
-   或在 Web 设置页的插件市场里「从本地目录安装」。
-3. 重启 `dsh web`，左侧栏出现「备份」图标。
-4. 点开面板，点「立即备份」验证一次；`~/.dsh/backups/<YYYYMMDD-HHmmss>/` 应出现，并收到桌面通知。
+   或在 Web 的插件页里「从本地目录安装」。
+3. `dsh plugin add` 只装包、不改 profile 清单，还需要两步（都改 `~/.dsh/profiles/web/`）：
+
+   - `package.json` 的 `dsh.profile.bundles` 里加一条 `"dsh-plugin-config-backup"`；
+   - `cordis.patch.yml` 末尾追加：
+
+     ```yaml
+     - insert:
+         - id: config-backup
+           name: dsh-plugin-config-backup
+           config:
+             enabled: true
+             intervalHours: 6
+             keepCount: 14
+             notifyDesktop: true
+     ```
+
+   （在 Web 插件页把该 bundle 打开，第一步会自动完成。）
+4. 重启 `dsh web`（或 dsh 桌面端），左侧栏出现「备份」图标。
+5. 点开面板，点「立即备份」验证一次；`~/.dsh/backups/<YYYYMMDD-HHmmss>/` 应出现，并收到桌面通知。
 
 ## 设置
 
