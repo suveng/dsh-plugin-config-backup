@@ -110,7 +110,8 @@ test/           引擎、Service、清单一致性测试
 
 ## 限制
 
-- 只在 macOS / Linux 上验证过通知；Windows 不弹桌面通知（面板和工具照常工作）。
+- 桌面通知：macOS 用 `osascript`（已实测），Linux 用 `notify-send`；Windows 不弹桌面通知（面板、toast 和工具照常工作）。
+- 装完插件要手动塞进 `dsh.profile.bundles`，`dsh plugin add` 不会自动做这件事。
 - 备份目录不能放在被备份的目录树里再被 include 进去（引擎会主动跳过自己）。
 - 快照是完整副本，配置很大时（`skills`、`storages` 里塞了大文件）会占空间；用 `keepCount` 或 `exclude` 控制。
 
