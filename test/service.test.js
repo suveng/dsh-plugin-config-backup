@@ -130,7 +130,8 @@ test('origin packs a snapshot and restore puts it back', async t => {
   const outcome = await service.restore(created.entry.id)
   assert.equal(outcome.restore.errors, 0)
   assert.equal(await readFile(join(home, 'cordis.patch.yml'), 'utf8'), '- []\n')
-  assert.ok(outcome.snapshot.entries.some(entry => entry.id === outcome.restore.safetyId && entry.kind === 'pre-restore'))
+  const after = await service.status()
+  assert.ok(after.entries.some(entry => entry.id === outcome.restore.safetyId && entry.kind === 'pre-restore'))
 })
 
 test('restore reports unknown ids as backup/not-found', async t => {
@@ -151,6 +152,7 @@ test('import adds an exported archive as a snapshot', async t => {
   assert.equal(result.entry.id.startsWith(created.entry.id), true)
   assert.match(result.entry.id, /-1$/)
   assert.equal(result.sourceHost.length > 0, true)
-  assert.ok(result.snapshot.entries.some(entry => entry.id === result.entry.id && entry.kind === 'import'))
+  const after = await service.status()
+  assert.ok(after.entries.some(entry => entry.id === result.entry.id && entry.kind === 'import'))
   await assert.rejects(service.import(archive.file), error => error.code === 'backup/import-failed')
 })
