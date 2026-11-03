@@ -82,6 +82,8 @@
 
 面板：备份记录里点某份的「恢复」→ 确认框 → 完成。当前配置会先自动备份成一份 `pre-restore`，所以还原本身也能撤回。
 
+还原只覆盖配置清单内的条目（`AGENTS.md`、`settings.yaml`、`cordis.patch.yml`、`.env`、`.credentials.yaml`、`skills/`、`storages/` 等），`~/.dsh` 下你自己放的其他文件既不会被删除也不会被覆盖；快照里超出清单的条目会列进返回值的 `foreign`。
+
 对话：让模型调 `config_backup_restore`（需要 `id`，会要求先确认）。
 
 手动（没有面板时）：

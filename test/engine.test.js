@@ -190,3 +190,32 @@ test('restore refuses a snapshot id that does not exist', async t => {
     /no backup named/,
   )
 })
+
+test('restore only overwrites configuration files, never the rest of the home', async t => {
+  const home = await fixture()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  const root = join(home, 'backups')
+  const { entry } = await backup(home)
+  await writeFile(join(home, 'unrelated.txt'), 'keep me\n')
+  const outcome = await restoreSnapshot({
+    root,
+    home,
+    id: entry.id,
+    keepCount: 5,
+    guard: relative => CONFIG_FILES.includes(relative.split('/')[0]) || CONFIG_DIRS.includes(relative.split('/')[0]),
+  })
+  assert.equal(outcome.errors, 0)
+  assert.deepEqual(outcome.blocked, [])
+  assert.equal(await readFile(join(home, 'unrelated.txt'), 'utf8'), 'keep me\n')
+})
+
+test('the guard records what a restore is not allowed to write', async t => {
+  const home = await fixture()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  const root = join(home, 'backups')
+  const { entry } = await backup(home)
+  await writeFile(join(home, 'AGENTS.md'), 'local edits\n')
+  const outcome = await restoreSnapshot({ root, home, id: entry.id, keepCount: 5, guard: relative => relative !== 'AGENTS.md' })
+  assert.deepEqual(outcome.blocked, ['AGENTS.md'])
+  assert.equal(await readFile(join(home, 'AGENTS.md'), 'utf8'), 'local edits\n')
+})

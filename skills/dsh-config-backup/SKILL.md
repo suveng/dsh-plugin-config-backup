@@ -35,6 +35,7 @@ whenToUse: 与 dsh 配置备份相关的任何请求——立即备份、列备�
    3. 新机：再 `config_backup_restore`（`id` 用刚导入的 id，`confirm: true`）→ 重启 dsh。
    同一个包重复导入会报 `this archive is already imported as <id>`，不是错误，直接跳过。
 7. **还原某份备份**（会覆盖，先确认）：优先调 `config_backup_restore`（`confirm: true` 必须由用户明确同意后再传）。它会先把当前配置存成 `pre-restore` 快照，返回里的 `safetyId` 就是回滚点——告诉用户"要撤回就再还原 safetyId"。
+   只覆盖配置清单内的条目（AGENTS.md/settings.yaml/cordis.patch.yml/.env/.credentials.yaml/skills/storages 等）；`blocked` 非空说明有文件被拒绝覆盖（不属于清单），把这几个文件名报给用户，别说"已全部还原"。
    没有工具时手动：
    ```bash
    ls -dt ~/.dsh/backups/*/ | head -5      # 挑快照
