@@ -91,6 +91,17 @@
 
 每份快照里有 `.backup.json`，记录时间、来源目录、文件数、字节数和是否有项被跳过。
 
+## 全局技能
+
+插件自带 `skills/dsh-config-backup/SKILL.md`，供 agent 判断"备份/恢复/改周期"这类请求该怎么做。装到全局技能目录：
+
+```bash
+mkdir -p ~/.dsh/skills/dsh-config-backup
+cp ~/.dsh/profiles/web/node_modules/dsh-plugin-config-backup/skills/dsh-config-backup/SKILL.md ~/.dsh/skills/dsh-config-backup/
+```
+
+之后任何工作区的会话都能自动发现它（`~/.dsh/skills/` 是用户级技能根），也可以 `/dsh-config-backup` 手动调用。
+
 ## Agent 工具
 
 对话里直接说「备份一下配置」即可，或显式调用：
