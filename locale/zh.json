@@ -44,5 +44,10 @@
   "kind.manual": "手动",
   "kind.agent": "会话",
   "error.title": "最近一次失败",
-  "service.offline": "备份服务不可用（Host 插件可能已卸载）"
+  "service.offline": "备份服务不可用（Host 插件可能已卸载）",
+  "kind.pre-restore": "还原前",
+  "kind.import": "导入",
+  "export.hint": "点某份备份的「导出」可打包成 .tar.gz，带到另一台机器上用「选择文件」导入。",
+  "import.hint": "导入后记录里多出一份，点「恢复」才会覆盖本机配置。",
+  "restore.hint": "「恢复」会用该备份覆盖当前配置，覆盖前自动先备份一份。"
 }

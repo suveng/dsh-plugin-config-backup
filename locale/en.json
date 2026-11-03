@@ -44,5 +44,10 @@
   "kind.manual": "manual",
   "kind.agent": "session",
   "error.title": "Latest failure",
-  "service.offline": "Backup service unavailable (plugin may have been unloaded)"
+  "service.offline": "Backup service unavailable (plugin may have been unloaded)",
+  "kind.pre-restore": "pre-restore",
+  "kind.import": "imported",
+  "export.hint": "Press Export on a backup to pack it into a .tar.gz; import it elsewhere with Choose file.",
+  "import.hint": "An import only adds a row; press Restore to apply it.",
+  "restore.hint": "Restore overwrites the current configuration, after taking a safety backup first."
 }

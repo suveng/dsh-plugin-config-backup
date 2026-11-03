@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, rm as remove, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm as remove, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
@@ -45,7 +45,7 @@ async function mount(settings = {}) {
 test('the service exports exactly the Remote methods the panel calls', () => {
   // `remoteMethods` reads the prototype of a live instance, so probe an instance.
   const names = remoteMethods({ __proto__: BackupService.prototype }).map(marker => marker.method).sort()
-  assert.deepEqual(names, ['prune', 'remove', 'run', 'status'])
+  assert.deepEqual(names, ['origin', 'prune', 'remove', 'restore', 'run', 'status'])
 })
 
 test('status reports the schedule and an empty history', async t => {
@@ -115,4 +115,27 @@ test('prune applies retention without creating a snapshot', async t => {
   const result = await service.prune()
   assert.deepEqual(result.removed, [])
   assert.equal(result.snapshot.entries.length, 1)
+})
+
+test('origin packs a snapshot and restore puts it back', async t => {
+  const { home, service } = await mount()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  const created = await service.run()
+  const archive = await service.origin(created.entry.id)
+  t.after(() => remove(archive.file, { force: true }))
+  assert.equal(archive.name, `dsh-backup-${created.entry.id}.tar.gz`)
+  assert.ok(archive.bytes > 0)
+
+  await writeFile(join(home, 'cordis.patch.yml'), '- changed: true\n')
+  const outcome = await service.restore(created.entry.id)
+  assert.equal(outcome.restore.errors, 0)
+  assert.equal(await readFile(join(home, 'cordis.patch.yml'), 'utf8'), '- []\n')
+  assert.ok(outcome.snapshot.entries.some(entry => entry.id === outcome.restore.safetyId && entry.kind === 'pre-restore'))
+})
+
+test('restore reports unknown ids as backup/not-found', async t => {
+  const { home, service } = await mount()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  await service.run()
+  await assert.rejects(service.restore('20200101-000000'), error => error.code === 'backup/not-found')
 })

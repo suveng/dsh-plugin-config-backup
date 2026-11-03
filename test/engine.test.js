@@ -7,10 +7,13 @@ import { test } from 'node:test'
 import {
   CONFIG_DIRS,
   CONFIG_FILES,
+  exportSnapshot,
+  importSnapshot,
   listSnapshots,
   pruneSnapshots,
   readLatestMeta,
   removeSnapshot,
+  restoreSnapshot,
   runBackup,
   snapshotName,
   snapshotTime,
@@ -131,4 +134,59 @@ test('the newest manifest is readable from the target directory', async t => {
   const meta = await readLatestMeta(join(home, 'backups'))
   assert.equal(meta.id, entry.id)
   assert.ok(CONFIG_DIRS.includes('skills'))
+})
+
+test('collision-suffixed snapshot names are still readable and removable', async t => {
+  const home = await fixture()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  const root = join(home, 'backups')
+  const first = await backup(home)
+  const second = await backup(home)
+  assert.notEqual(second.entry.id, first.entry.id)
+  assert.ok(second.entry.id.endsWith('-1'))
+  const ids = (await listSnapshots(root)).map(row => row.id).sort()
+  assert.deepEqual(ids, [first.entry.id, second.entry.id].sort())
+  assert.equal(await removeSnapshot(root, second.entry.id), true)
+})
+
+test('export, import, and restore move a configuration between machines', async t => {
+  const source = await fixture()
+  const target = await fixture()
+  t.after(() => remove(source, { recursive: true, force: true }))
+  t.after(() => remove(target, { recursive: true, force: true }))
+  const sourceRoot = join(source, 'backups')
+  const { entry } = await backup(source)
+  const archive = await exportSnapshot(sourceRoot, entry.id, join(source, 'out'))
+  t.after(() => remove(archive.file, { force: true }))
+  assert.ok(archive.bytes > 0)
+  assert.match(archive.sha256, /^[0-9a-f]{64}$/)
+
+  const targetRoot = join(target, 'backups')
+  const imported = await importSnapshot(targetRoot, archive.file)
+  assert.equal(imported.entry.id, entry.id)
+  assert.equal(imported.manifest.host.length > 0, true)
+  assert.equal(await readFile(join(imported.entry.path, 'AGENTS.md'), 'utf8'), '# AGENTS.md\n')
+
+  await assert.rejects(importSnapshot(targetRoot, archive.file), /already imported/)
+
+  await writeFile(join(target, 'AGENTS.md'), 'changed here\n')
+  const outcome = await restoreSnapshot({ root: targetRoot, home: target, id: imported.entry.id, keepCount: 5 })
+  assert.equal(outcome.errors, 0)
+  assert.equal(await readFile(join(target, 'AGENTS.md'), 'utf8'), '# AGENTS.md\n')
+  assert.equal(await readFile(join(target, 'skills', 'demo', 'SKILL.md'), 'utf8'), '# skill\n')
+  // The configuration overwritten by the restore survives as kind `pre-restore`.
+  const rows = await listSnapshots(targetRoot)
+  const safety = rows.find(row => row.id === outcome.safetyId)
+  assert.equal(safety.kind, 'pre-restore')
+  assert.equal(await readFile(join(safety.path, 'AGENTS.md'), 'utf8'), 'changed here\n')
+})
+
+test('restore refuses a snapshot id that does not exist', async t => {
+  const home = await fixture()
+  t.after(() => remove(home, { recursive: true, force: true }))
+  await backup(home)
+  await assert.rejects(
+    restoreSnapshot({ root: join(home, 'backups'), home, id: '20200101-000000', keepCount: 5 }),
+    /no backup named/,
+  )
 })

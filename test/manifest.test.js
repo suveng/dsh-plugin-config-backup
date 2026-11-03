@@ -62,4 +62,7 @@ test('the host entry mounts the service and its tools', () => {
   assert.doesNotMatch(entry, /ctx\.set\('backups'/)
   assert.match(entry, /config_backup_run/)
   assert.match(entry, /config_backup_list/)
+  assert.match(entry, /config_backup_export/)
+  assert.match(entry, /config_backup_import/)
+  assert.match(entry, /config_backup_restore/)
 })
