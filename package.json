@@ -69,5 +69,9 @@
     "@deepseek-ai/schemastery": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
